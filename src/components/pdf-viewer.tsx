@@ -5,7 +5,10 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
 
 interface PdfViewerProps {
   file: File | string;
@@ -65,8 +68,8 @@ export default function PdfViewer({
         />
       </Document>
       {overlay && (
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="pointer-events-auto">{overlay}</div>
+        <div className="absolute inset-0" style={{ width, height: "100%" }}>
+          {overlay}
         </div>
       )}
       {numPages > 1 && (

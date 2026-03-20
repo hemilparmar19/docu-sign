@@ -186,7 +186,7 @@ export default function UploadForm() {
           )}
 
           <div
-            className="border rounded-lg overflow-hidden inline-block relative bg-white shadow-sm"
+            className="border rounded-lg inline-block relative bg-white shadow-sm"
             style={{
               width: pageDimensions.width,
               height: pageDimensions.height,

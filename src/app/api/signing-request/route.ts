@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Send email via Resend
     const signingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/sign/${token}`;
 
-    await getResend().emails.send({
+    const emailResult = await getResend().emails.send({
       from: "DocuSign <onboarding@resend.dev>",
       to: recipientEmail,
       subject: `${recipientName}, you have a document to sign`,
@@ -91,11 +91,14 @@ export async function POST(request: NextRequest) {
       `,
     });
 
+    console.log("Resend email result:", JSON.stringify(emailResult));
+
     return NextResponse.json({ success: true, token: signingRequest.token });
   } catch (error) {
     console.error("Error creating signing request:", error);
+    const message = error instanceof Error ? error.message : "Failed to create signing request";
     return NextResponse.json(
-      { error: "Failed to create signing request" },
+      { error: message },
       { status: 500 }
     );
   }
