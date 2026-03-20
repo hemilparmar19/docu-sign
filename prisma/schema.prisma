@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+}
+
+model SigningRequest {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  token           String   @unique
+  senderEmail     String
+  recipientName   String
+  recipientEmail  String
+  pdfUrl          String
+  signedPdfUrl    String?
+  signatureX      Float
+  signatureY      Float
+  signatureWidth  Float
+  signatureHeight Float
+  signaturePage   Int
+  status          Status   @default(PENDING)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
