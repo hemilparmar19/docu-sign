@@ -26,9 +26,7 @@ export default function SigningCanvas({
     if (sigCanvasRef.current?.isEmpty()) {
       return;
     }
-    const dataUrl = sigCanvasRef.current
-      ?.getTrimmedCanvas()
-      .toDataURL("image/png");
+    const dataUrl = sigCanvasRef.current?.toDataURL("image/png");
     if (dataUrl) {
       onSign(dataUrl);
     }
@@ -37,7 +35,7 @@ export default function SigningCanvas({
   return (
     <div className="space-y-3">
       <div
-        className="border-2 border-blue-500 rounded-lg overflow-hidden bg-white"
+        className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white relative"
         style={{ width, height }}
       >
         <SignatureCanvas
@@ -45,17 +43,22 @@ export default function SigningCanvas({
           canvasProps={{
             width,
             height,
-            className: "signature-canvas",
+            className: "signature-canvas cursor-crosshair",
           }}
           backgroundColor="rgba(255, 255, 255, 0)"
+          penColor="#1e3a5f"
         />
+        <div className="absolute bottom-3 left-3 right-3 border-b border-gray-300 pointer-events-none" />
+        <span className="absolute bottom-1 left-3 text-[10px] text-gray-300 pointer-events-none select-none">
+          Draw your signature above this line
+        </span>
       </div>
       <div className="flex gap-2">
         <button
           type="button"
           onClick={handleClear}
           disabled={disabled}
-          className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
         >
           Clear
         </button>
@@ -63,7 +66,7 @@ export default function SigningCanvas({
           type="button"
           onClick={handleConfirm}
           disabled={disabled}
-          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
           Confirm Signature
         </button>

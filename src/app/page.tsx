@@ -1,13 +1,4 @@
-import dynamic from "next/dynamic";
-
-const UploadForm = dynamic(() => import("@/components/upload-form"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-48">
-      <p className="text-gray-400">Loading...</p>
-    </div>
-  ),
-});
+import UploadForm from "@/components/upload-form";
 
 export default function HomePage() {
   return (

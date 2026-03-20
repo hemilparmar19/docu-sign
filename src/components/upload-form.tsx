@@ -1,9 +1,18 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import PdfViewer from "./pdf-viewer";
 import SignaturePlacer from "./signature-placer";
+
+const PdfViewer = dynamic(() => import("./pdf-viewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-[792px] w-[612px] bg-white border rounded-lg">
+      <p className="text-gray-400">Loading PDF viewer...</p>
+    </div>
+  ),
+});
 
 interface SignaturePlacement {
   x: number;

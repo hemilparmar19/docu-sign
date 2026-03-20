@@ -1,0 +1,36 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { token: string } }
+) {
+  try {
+    const signingRequest = await prisma.signingRequest.findUnique({
+      where: { token: params.token },
+    });
+
+    if (!signingRequest) {
+      return NextResponse.json(
+        { error: "Signing request not found" },
+        { status: 404 }
+      );
+    }
+
+    const pdfResponse = await fetch(signingRequest.pdfUrl);
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+
+    return new NextResponse(pdfBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": "inline",
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching PDF:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch PDF" },
+      { status: 500 }
+    );
+  }
+}
