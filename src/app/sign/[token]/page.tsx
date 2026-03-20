@@ -6,10 +6,12 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import SigningCanvas from "@/components/signing-canvas";
 
+const PDF_BASE_WIDTH = 612;
+
 const PdfViewer = dynamic(() => import("@/components/pdf-viewer"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-[792px] w-[612px] bg-white border rounded-lg">
+    <div className="flex items-center justify-center aspect-[612/792] w-full max-w-[612px] bg-white border rounded-lg">
       <p className="text-gray-400">Loading PDF...</p>
     </div>
   ),
@@ -41,6 +43,7 @@ export default function SignPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [numPages, setNumPages] = useState(0);
+  const [pdfRenderWidth, setPdfRenderWidth] = useState(PDF_BASE_WIDTH);
   const [signatureConfirmed, setSignatureConfirmed] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
@@ -110,7 +113,7 @@ export default function SignPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading document...</p>
@@ -121,7 +124,7 @@ export default function SignPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen px-4">
         <div className="text-center max-w-md">
           <div className="text-red-500 text-5xl mb-4">!</div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -136,24 +139,25 @@ export default function SignPage() {
   if (!request) return null;
 
   const isSignaturePage = currentPage === request.signaturePage + 1;
+  const scale = pdfRenderWidth / PDF_BASE_WIDTH;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Sign Document</h1>
-        <p className="text-gray-600 mt-1">
+    <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+      <div className="text-center mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Sign Document</h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-1">
           Hi {request.recipientName}, please review the document and sign on
           page {request.signaturePage + 1}.
         </p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">
           Requested by {request.senderEmail}
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
+      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6 space-y-6">
         {/* Document Preview */}
         <div>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <h2 className="text-lg font-medium text-gray-800">
               Document Preview
             </h2>
@@ -195,32 +199,31 @@ export default function SignPage() {
             </button>
           )}
 
-          <div className="flex justify-center">
-            <div className="border rounded-lg overflow-hidden inline-block relative">
-              <PdfViewer
-                file={`/api/pdf/${token}`}
-                pageNumber={currentPage}
-                width={612}
-                onLoadSuccess={setNumPages}
-                overlay={
-                  isSignaturePage ? (
-                    <div
-                      className="absolute border-2 border-dashed border-orange-500 bg-orange-500/10 rounded flex items-center justify-center"
-                      style={{
-                        left: request.signatureX,
-                        top: request.signatureY,
-                        width: request.signatureWidth,
-                        height: request.signatureHeight,
-                      }}
-                    >
-                      <span className="text-orange-600 text-xs font-medium">
-                        Sign Here
-                      </span>
-                    </div>
-                  ) : undefined
-                }
-              />
-            </div>
+          <div className="border rounded-lg overflow-hidden">
+            <PdfViewer
+              file={`/api/pdf/${token}`}
+              pageNumber={currentPage}
+              maxWidth={PDF_BASE_WIDTH}
+              onLoadSuccess={setNumPages}
+              onWidthChange={setPdfRenderWidth}
+              overlay={
+                isSignaturePage ? (
+                  <div
+                    className="absolute border-2 border-dashed border-orange-500 bg-orange-500/10 rounded flex items-center justify-center"
+                    style={{
+                      left: request.signatureX * scale,
+                      top: request.signatureY * scale,
+                      width: request.signatureWidth * scale,
+                      height: request.signatureHeight * scale,
+                    }}
+                  >
+                    <span className="text-orange-600 text-xs font-medium">
+                      Sign Here
+                    </span>
+                  </div>
+                ) : undefined
+              }
+            />
           </div>
         </div>
 
@@ -239,8 +242,6 @@ export default function SignPage() {
 
           {!signatureConfirmed ? (
             <SigningCanvas
-              width={400}
-              height={150}
               onSign={handleSignatureCapture}
               disabled={submitting}
             />
@@ -254,11 +255,11 @@ export default function SignPage() {
                 <img
                   src={signatureDataUrl!}
                   alt="Your signature"
-                  className="max-h-[100px] bg-white rounded border p-2"
+                  className="max-h-[100px] max-w-full bg-white rounded border p-2"
                 />
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={handleResetSignature}

@@ -1,6 +1,6 @@
 export default function SuccessPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-screen px-4">
       <div className="text-center max-w-md">
         <div className="text-green-500 text-6xl mb-4">&#10003;</div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">

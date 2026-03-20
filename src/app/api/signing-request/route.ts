@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
 
     // Send email via Resend
     const signingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/sign/${token}`;
+    const pdfBuffer = Buffer.from(await file.arrayBuffer());
 
     const emailResult = await getResend().emails.send({
       from: "DocuSign <onboarding@resend.dev>",
@@ -89,6 +90,12 @@ export async function POST(request: NextRequest) {
           <p style="color: #6b7280; font-size: 14px;">Or copy this link: ${signingLink}</p>
         </div>
       `,
+      attachments: [
+        {
+          filename: file.name,
+          content: pdfBuffer.toString("base64"),
+        },
+      ],
     });
 
     console.log("Resend email result:", JSON.stringify(emailResult));

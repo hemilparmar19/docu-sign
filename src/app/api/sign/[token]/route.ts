@@ -94,7 +94,7 @@ export async function POST(
       attachments: [
         {
           filename: "signed-document.pdf",
-          content: signedPdfBuffer,
+          content: signedPdfBuffer.toString("base64"),
         },
       ],
     });

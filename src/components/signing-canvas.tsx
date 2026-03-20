@@ -1,22 +1,35 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 
 interface SigningCanvasProps {
-  width: number;
-  height: number;
   onSign: (signatureDataUrl: string) => void;
   disabled?: boolean;
 }
 
 export default function SigningCanvas({
-  width,
-  height,
   onSign,
   disabled = false,
 }: SigningCanvasProps) {
   const sigCanvasRef = useRef<SignatureCanvas>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 400, height: 150 });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const w = Math.min(el.clientWidth, 400);
+      if (w > 0) setDimensions({ width: w, height: Math.round(w * 0.375) });
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const handleClear = useCallback(() => {
     sigCanvasRef.current?.clear();
@@ -33,16 +46,16 @@ export default function SigningCanvas({
   }, [onSign]);
 
   return (
-    <div className="space-y-3">
+    <div ref={containerRef} className="space-y-3 w-full max-w-[400px]">
       <div
         className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white relative"
-        style={{ width, height }}
+        style={{ width: dimensions.width, height: dimensions.height }}
       >
         <SignatureCanvas
           ref={sigCanvasRef}
           canvasProps={{
-            width,
-            height,
+            width: dimensions.width,
+            height: dimensions.height,
             className: "signature-canvas cursor-crosshair",
           }}
           backgroundColor="rgba(255, 255, 255, 0)"

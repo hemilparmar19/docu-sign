@@ -5,10 +5,12 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import SignaturePlacer from "./signature-placer";
 
+const PDF_BASE_WIDTH = 612;
+
 const PdfViewer = dynamic(() => import("./pdf-viewer"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-[792px] w-[612px] bg-white border rounded-lg">
+    <div className="flex items-center justify-center aspect-[612/792] w-full max-w-[612px] bg-white border rounded-lg">
       <p className="text-gray-400">Loading PDF viewer...</p>
     </div>
   ),
@@ -28,6 +30,7 @@ export default function UploadForm() {
   const [recipientEmail, setRecipientEmail] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [numPages, setNumPages] = useState(0);
+  const [pdfRenderWidth, setPdfRenderWidth] = useState(PDF_BASE_WIDTH);
   const [pageDimensions, setPageDimensions] = useState({
     width: 612,
     height: 792,
@@ -64,15 +67,17 @@ export default function UploadForm() {
     setIsSubmitting(true);
 
     try {
+      // Scale coordinates from rendered width back to base 612px
+      const scale = PDF_BASE_WIDTH / pdfRenderWidth;
       const formData = new FormData();
       formData.append("pdf", file);
       formData.append("senderEmail", senderEmail);
       formData.append("recipientName", recipientName);
       formData.append("recipientEmail", recipientEmail);
-      formData.append("signatureX", placement.x.toString());
-      formData.append("signatureY", placement.y.toString());
-      formData.append("signatureWidth", placement.width.toString());
-      formData.append("signatureHeight", placement.height.toString());
+      formData.append("signatureX", (placement.x * scale).toString());
+      formData.append("signatureY", (placement.y * scale).toString());
+      formData.append("signatureWidth", (placement.width * scale).toString());
+      formData.append("signatureHeight", (placement.height * scale).toString());
       formData.append("signaturePage", (currentPage - 1).toString());
 
       const response = await fetch("/api/signing-request", {
@@ -169,7 +174,7 @@ export default function UploadForm() {
 
           {/* Page Navigation */}
           {numPages > 1 && (
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               <button
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
@@ -194,19 +199,14 @@ export default function UploadForm() {
             </div>
           )}
 
-          <div
-            className="border rounded-lg inline-block relative bg-white shadow-sm"
-            style={{
-              width: pageDimensions.width,
-              height: pageDimensions.height,
-            }}
-          >
+          <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
             <PdfViewer
               file={file}
               pageNumber={currentPage}
-              width={612}
+              maxWidth={PDF_BASE_WIDTH}
               onLoadSuccess={setNumPages}
               onPageRenderSuccess={(dims) => setPageDimensions(dims)}
+              onWidthChange={setPdfRenderWidth}
               overlay={
                 <SignaturePlacer
                   placement={placement}
@@ -217,9 +217,7 @@ export default function UploadForm() {
           </div>
 
           <p className="text-xs text-gray-500 mt-2">
-            Signature position: ({Math.round(placement.x)},{" "}
-            {Math.round(placement.y)}) — Size: {Math.round(placement.width)} x{" "}
-            {Math.round(placement.height)} — Page: {currentPage}
+            Signature page: {currentPage}
           </p>
         </div>
       )}
